@@ -1,0 +1,151 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><%= property.name %></h1>
+  <div class="actions">
+    <a href="/properties" class="btn btn-secondary">Back to Properties</a>
+    <a href="/properties/<%= property.id %>/edit" class="btn btn-primary">Edit Property</a>
+    <form action="/properties/<%= property.id %>/delete" method="POST" style="display:inline;">
+      <button type="submit" class="btn btn-danger confirm-delete">Delete Property</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Property Details</h2>
+  </div>
+  <div class="card-body">
+    <p><strong>Address:</strong> <%= property.address %></p>
+    <p>
+      <strong>Type:</strong>
+      <% if (property.type === 'building') { %>
+        <span class="badge badge-info">Building</span>
+      <% } else { %>
+        <span class="badge badge-secondary">Standalone</span>
+      <% } %>
+    </p>
+    <% if (property.notes) { %>
+      <p><strong>Notes:</strong> <%= property.notes %></p>
+    <% } %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Units (<%= units ? units.length : 0 %>)</h2>
+  </div>
+  <div class="card-body">
+    <% if (units && units.length > 0) { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Unit #</th>
+            <th>Bedrooms</th>
+            <th>Bathrooms</th>
+            <th>Sq Ft</th>
+            <th>Rent</th>
+            <th>Status</th>
+            <th>Current Tenant</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% units.forEach(function(unit) { %>
+            <tr>
+              <td><%= unit.unit_number %></td>
+              <td><%= unit.bedrooms %></td>
+              <td><%= unit.bathrooms %></td>
+              <td><%= unit.square_feet %></td>
+              <td>$<%= parseFloat(unit.rent_amount).toFixed(2) %></td>
+              <td>
+                <% if (unit.status === 'occupied') { %>
+                  <span class="badge badge-success">Occupied</span>
+                <% } else if (unit.status === 'vacant') { %>
+                  <span class="badge badge-warning">Vacant</span>
+                <% } else if (unit.status === 'maintenance') { %>
+                  <span class="badge badge-danger">Maintenance</span>
+                <% } else { %>
+                  <span class="badge badge-secondary"><%= unit.status %></span>
+                <% } %>
+              </td>
+              <td>
+                <% if (unit.first_name && unit.last_name) { %>
+                  <%= unit.first_name %> <%= unit.last_name %>
+                  <% if (unit.lease_id) { %>
+                    <% if (unit.lease_status === 'active') { %>
+                      <span class="badge badge-success">Active Lease</span>
+                    <% } else if (unit.lease_status === 'expiring') { %>
+                      <span class="badge badge-warning">Expiring</span>
+                    <% } else if (unit.lease_status === 'expired') { %>
+                      <span class="badge badge-danger">Expired</span>
+                    <% } %>
+                  <% } %>
+                <% } else { %>
+                  <span class="badge badge-secondary">No Tenant</span>
+                <% } %>
+              </td>
+              <td class="actions">
+                <a href="/properties/<%= property.id %>/units/<%= unit.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
+                <form action="/properties/<%= property.id %>/units/<%= unit.id %>/delete" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger confirm-delete">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <div class="empty-state">
+        <p>No units have been added to this property yet.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<% if (property.type === 'building') { %>
+  <div class="card">
+    <div class="card-header">
+      <h2>Add New Unit</h2>
+    </div>
+    <div class="card-body">
+      <form action="/properties/<%= property.id %>/units" method="POST">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="unit_number">Unit Number</label>
+            <input type="text" id="unit_number" name="unit_number" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <input type="number" id="bedrooms" name="bedrooms" class="form-control" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <input type="number" id="bathrooms" name="bathrooms" class="form-control" min="0" step="0.5" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="square_feet">Square Feet</label>
+            <input type="number" id="square_feet" name="square_feet" class="form-control" min="0">
+          </div>
+          <div class="form-group">
+            <label for="rent_amount">Rent Amount ($)</label>
+            <input type="number" id="rent_amount" name="rent_amount" class="form-control" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status" class="form-control">
+              <option value="vacant">Vacant</option>
+              <option value="occupied">Occupied</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Unit</button>
+      </form>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

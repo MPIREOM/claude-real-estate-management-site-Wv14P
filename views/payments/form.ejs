@@ -1,0 +1,132 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><%= payment ? 'Edit Payment' : 'Record New Payment' %></h1>
+  <a href="/payments" class="btn btn-secondary">Back to Payments</a>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2><%= payment ? 'Update Payment Details' : 'Payment Details' %></h2>
+  </div>
+  <div class="card-body">
+    <form action="<%= payment ? '/payments/' + payment.id : '/payments' %>" method="POST">
+
+      <div class="form-group">
+        <label for="lease_id">Lease</label>
+        <select id="lease_id" name="lease_id" class="form-control" required>
+          <option value="">-- Select a Lease --</option>
+          <% leases.forEach(function(lease) { %>
+            <option
+              value="<%= lease.id %>"
+              data-rent="<%= lease.rent_amount %>"
+              <%= (payment && payment.lease_id == lease.id) || (!payment && preselectedLeaseId && preselectedLeaseId == lease.id) ? 'selected' : '' %>
+            >
+              <%= lease.property_name %> - Unit <%= lease.unit_number %> (<%= lease.first_name %> <%= lease.last_name %>)
+            </option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="amount_due">Amount Due</label>
+          <input type="number" id="amount_due" name="amount_due" class="form-control" step="0.01" min="0" value="<%= payment ? payment.amount_due : '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="amount_paid">Amount Paid</label>
+          <input type="number" id="amount_paid" name="amount_paid" class="form-control" step="0.01" min="0" value="<%= payment ? payment.amount_paid : '0.00' %>">
+        </div>
+
+        <div class="form-group">
+          <label for="late_fee">Late Fee</label>
+          <input type="number" id="late_fee" name="late_fee" class="form-control" step="0.01" min="0" value="<%= payment ? payment.late_fee : '0.00' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="due_date">Due Date</label>
+          <input type="date" id="due_date" name="due_date" class="form-control" value="<%= payment && payment.due_date ? new Date(payment.due_date).toISOString().split('T')[0] : '' %>" required>
+        </div>
+
+        <div class="form-group">
+          <label for="paid_date">Paid Date</label>
+          <input type="date" id="paid_date" name="paid_date" class="form-control" value="<%= payment && payment.paid_date ? new Date(payment.paid_date).toISOString().split('T')[0] : '' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="payment_method">Payment Method</label>
+          <select id="payment_method" name="payment_method" class="form-control">
+            <option value="">-- Select Method --</option>
+            <option value="cash" <%= payment && payment.payment_method === 'cash' ? 'selected' : '' %>>Cash</option>
+            <option value="check" <%= payment && payment.payment_method === 'check' ? 'selected' : '' %>>Check</option>
+            <option value="bank_transfer" <%= payment && payment.payment_method === 'bank_transfer' ? 'selected' : '' %>>Bank Transfer</option>
+            <option value="credit_card" <%= payment && payment.payment_method === 'credit_card' ? 'selected' : '' %>>Credit Card</option>
+            <option value="other" <%= payment && payment.payment_method === 'other' ? 'selected' : '' %>>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status" class="form-control" required>
+            <option value="pending" <%= payment && payment.status === 'pending' ? 'selected' : '' %>>Pending</option>
+            <option value="paid" <%= payment && payment.status === 'paid' ? 'selected' : '' %>>Paid</option>
+            <option value="partial" <%= payment && payment.status === 'partial' ? 'selected' : '' %>>Partial</option>
+            <option value="overdue" <%= payment && payment.status === 'overdue' ? 'selected' : '' %>>Overdue</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" class="form-control" rows="3"><%= payment ? payment.notes : '' %></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary"><%= payment ? 'Update Payment' : 'Record Payment' %></button>
+        <a href="/payments" class="btn btn-secondary">Cancel</a>
+        <% if (payment) { %>
+          <form action="/payments/<%= payment.id %>/delete" method="POST" style="display:inline;">
+            <button type="submit" class="btn btn-danger confirm-delete">Delete</button>
+          </form>
+        <% } %>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var leaseSelect = document.getElementById('lease_id');
+    var amountDueInput = document.getElementById('amount_due');
+    var isNewPayment = <%= payment ? 'false' : 'true' %>;
+
+    if (isNewPayment) {
+      leaseSelect.addEventListener('change', function() {
+        var selectedOption = leaseSelect.options[leaseSelect.selectedIndex];
+        var rentAmount = selectedOption.getAttribute('data-rent');
+        if (rentAmount) {
+          amountDueInput.value = parseFloat(rentAmount).toFixed(2);
+        } else {
+          amountDueInput.value = '';
+        }
+      });
+
+      // Auto-fill on page load if a lease is preselected
+      if (leaseSelect.value) {
+        var selectedOption = leaseSelect.options[leaseSelect.selectedIndex];
+        var rentAmount = selectedOption.getAttribute('data-rent');
+        if (rentAmount && !amountDueInput.value) {
+          amountDueInput.value = parseFloat(rentAmount).toFixed(2);
+        }
+      }
+    }
+  })();
+</script>
+
+<%- include('../partials/footer') %>

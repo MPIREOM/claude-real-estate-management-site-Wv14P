@@ -1,0 +1,80 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Payments</h1>
+  <a href="/payments/new" class="btn btn-primary">Record New Payment</a>
+</div>
+
+<div class="filter-tabs">
+  <a href="/payments" class="btn btn-sm <%= statusFilter === 'all' || !statusFilter ? 'btn-primary' : 'btn-secondary' %>">All</a>
+  <a href="/payments?status=pending" class="btn btn-sm <%= statusFilter === 'pending' ? 'btn-primary' : 'btn-secondary' %>">Pending</a>
+  <a href="/payments?status=paid" class="btn btn-sm <%= statusFilter === 'paid' ? 'btn-primary' : 'btn-secondary' %>">Paid</a>
+  <a href="/payments?status=partial" class="btn btn-sm <%= statusFilter === 'partial' ? 'btn-primary' : 'btn-secondary' %>">Partial</a>
+  <a href="/payments?status=overdue" class="btn btn-sm <%= statusFilter === 'overdue' ? 'btn-primary' : 'btn-secondary' %>">Overdue</a>
+</div>
+
+<% if (payments && payments.length > 0) { %>
+  <div class="card">
+    <div class="card-header">
+      <h2>Payment Records</h2>
+    </div>
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tenant</th>
+            <th>Property</th>
+            <th>Unit</th>
+            <th>Amount Due</th>
+            <th>Amount Paid</th>
+            <th>Late Fee</th>
+            <th>Due Date</th>
+            <th>Paid Date</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% payments.forEach(function(payment) { %>
+            <tr>
+              <td><%= payment.first_name %> <%= payment.last_name %></td>
+              <td><%= payment.property_name %></td>
+              <td><%= payment.unit_number %></td>
+              <td>$<%= parseFloat(payment.amount_due).toFixed(2) %></td>
+              <td>$<%= parseFloat(payment.amount_paid).toFixed(2) %></td>
+              <td>$<%= parseFloat(payment.late_fee || 0).toFixed(2) %></td>
+              <td><%= payment.due_date ? new Date(payment.due_date).toLocaleDateString() : '-' %></td>
+              <td><%= payment.paid_date ? new Date(payment.paid_date).toLocaleDateString() : '-' %></td>
+              <td><%= payment.payment_method ? payment.payment_method.replace(/_/g, ' ') : '-' %></td>
+              <td>
+                <% if (payment.status === 'paid') { %>
+                  <span class="badge badge-success">Paid</span>
+                <% } else if (payment.status === 'partial') { %>
+                  <span class="badge badge-warning">Partial</span>
+                <% } else if (payment.status === 'overdue') { %>
+                  <span class="badge badge-danger">Overdue</span>
+                <% } else { %>
+                  <span class="badge badge-secondary">Pending</span>
+                <% } %>
+              </td>
+              <td class="actions">
+                <a href="/payments/<%= payment.id %>/edit" class="btn btn-sm btn-secondary">Edit</a>
+                <form action="/payments/<%= payment.id %>/delete" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger confirm-delete">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } else { %>
+  <div class="empty-state">
+    <p>No payments found.</p>
+    <a href="/payments/new" class="btn btn-primary">Record New Payment</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

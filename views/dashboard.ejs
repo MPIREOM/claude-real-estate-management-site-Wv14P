@@ -1,0 +1,134 @@
+<%- include('partials/header') %>
+
+<div class="page-header">
+  <h1>Dashboard</h1>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">&#9962;</div>
+    <div class="stat-value"><%= stats.totalProperties %></div>
+    <div class="stat-label">Properties</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">&#9633;</div>
+    <div class="stat-value"><%= stats.occupiedUnits %> / <%= stats.totalUnits %></div>
+    <div class="stat-label">Occupied / Total Units</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">&#9823;</div>
+    <div class="stat-value"><%= stats.totalTenants %></div>
+    <div class="stat-label">Tenants</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">&#9997;</div>
+    <div class="stat-value"><%= stats.activeLeases %></div>
+    <div class="stat-label">Active Leases</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">&#36;</div>
+    <div class="stat-value">$<%= Number(stats.monthlyRevenue).toLocaleString() %></div>
+    <div class="stat-label">Collected This Month</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">&#36;</div>
+    <div class="stat-value">$<%= Number(stats.totalDueThisMonth).toLocaleString() %></div>
+    <div class="stat-label">Due This Month</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="color:var(--danger)">&#9888;</div>
+    <div class="stat-value" style="color:var(--danger)"><%= stats.overduePayments %></div>
+    <div class="stat-label">Overdue Payments</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="color:var(--warning)">&#128295;</div>
+    <div class="stat-value"><%= stats.openMaintenance %></div>
+    <div class="stat-label">Open Maintenance</div>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="card">
+    <div class="card-header">
+      <h3>Recent Payments</h3>
+      <a href="/payments" class="btn btn-sm btn-outline">View All</a>
+    </div>
+    <div class="card-body">
+      <% if (recentPayments.length === 0) { %>
+        <div class="empty-state"><p>No payments recorded yet</p></div>
+      <% } else { %>
+        <table>
+          <thead><tr><th>Tenant</th><th>Property</th><th>Amount</th><th>Status</th></tr></thead>
+          <tbody>
+            <% recentPayments.forEach(p => { %>
+              <tr>
+                <td><%= p.first_name %> <%= p.last_name %></td>
+                <td><%= p.property_name %> - <%= p.unit_number %></td>
+                <td>$<%= Number(p.amount_paid).toLocaleString() %></td>
+                <td>
+                  <span class="badge badge-<%= p.status === 'paid' ? 'success' : p.status === 'partial' ? 'warning' : p.status === 'overdue' ? 'danger' : 'secondary' %>"><%= p.status %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Open Maintenance</h3>
+      <a href="/maintenance" class="btn btn-sm btn-outline">View All</a>
+    </div>
+    <div class="card-body">
+      <% if (recentMaintenance.length === 0) { %>
+        <div class="empty-state"><p>No open maintenance requests</p></div>
+      <% } else { %>
+        <table>
+          <thead><tr><th>Issue</th><th>Property</th><th>Priority</th><th>Status</th></tr></thead>
+          <tbody>
+            <% recentMaintenance.forEach(m => { %>
+              <tr>
+                <td><%= m.title %></td>
+                <td><%= m.property_name %> - <%= m.unit_number %></td>
+                <td>
+                  <span class="badge badge-<%= m.priority === 'urgent' ? 'danger' : m.priority === 'high' ? 'warning' : m.priority === 'medium' ? 'info' : 'secondary' %>"><%= m.priority %></span>
+                </td>
+                <td>
+                  <span class="badge badge-<%= m.status === 'completed' ? 'success' : m.status === 'in_progress' ? 'info' : 'secondary' %>"><%= m.status %></span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<% if (expiringLeases.length > 0) { %>
+<div class="card" style="margin-top: 20px">
+  <div class="card-header">
+    <h3>Leases Expiring Within 30 Days</h3>
+    <a href="/leases" class="btn btn-sm btn-outline">View All</a>
+  </div>
+  <div class="card-body">
+    <table>
+      <thead><tr><th>Tenant</th><th>Property</th><th>End Date</th><th>Rent</th></tr></thead>
+      <tbody>
+        <% expiringLeases.forEach(l => { %>
+          <tr>
+            <td><%= l.first_name %> <%= l.last_name %></td>
+            <td><%= l.property_name %> - <%= l.unit_number %></td>
+            <td><%= l.end_date %></td>
+            <td>$<%= Number(l.rent_amount).toLocaleString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

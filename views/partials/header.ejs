@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Property Manager</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="app-layout">
+  <button class="menu-toggle" onclick="toggleSidebar()">&#9776;</button>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Property Manager</h2>
+      <small>Real Estate Management</small>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="/dashboard" class="<%= currentPath === '/dashboard' ? 'active' : '' %>">
+        <span class="nav-icon">&#9633;</span> Dashboard
+      </a>
+      <a href="/properties" class="<%= currentPath.startsWith('/properties') ? 'active' : '' %>">
+        <span class="nav-icon">&#9962;</span> Properties
+      </a>
+      <a href="/tenants" class="<%= currentPath.startsWith('/tenants') ? 'active' : '' %>">
+        <span class="nav-icon">&#9823;</span> Tenants
+      </a>
+      <a href="/leases" class="<%= currentPath.startsWith('/leases') ? 'active' : '' %>">
+        <span class="nav-icon">&#9997;</span> Leases
+      </a>
+      <a href="/payments" class="<%= currentPath.startsWith('/payments') ? 'active' : '' %>">
+        <span class="nav-icon">&#36;</span> Payments
+      </a>
+      <a href="/maintenance" class="<%= currentPath.startsWith('/maintenance') ? 'active' : '' %>">
+        <span class="nav-icon">&#128295;</span> Maintenance
+      </a>
+      <a href="/reports" class="<%= currentPath.startsWith('/reports') ? 'active' : '' %>">
+        <span class="nav-icon">&#128202;</span> Reports
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <span><%= user ? user.name : '' %></span> &middot;
+      <a href="/logout">Sign Out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <% if (success) { %>
+      <div class="alert alert-success"><%= success %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>

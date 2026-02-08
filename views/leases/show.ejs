@@ -1,0 +1,163 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Lease Details</h1>
+  <div class="actions">
+    <a href="/leases/<%= lease.id %>/edit" class="btn btn-primary">Edit Lease</a>
+    <form action="/leases/<%= lease.id %>/delete" method="POST" class="confirm-delete" style="display:inline;">
+      <button type="submit" class="btn btn-danger">Delete Lease</button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>
+      Lease &mdash;
+      <a href="/tenants/<%= lease.tenant_id %>"><%= lease.first_name %> <%= lease.last_name %></a>
+      <% if (lease.status === 'active') { %>
+        <span class="badge badge-success">Active</span>
+      <% } else if (lease.status === 'pending') { %>
+        <span class="badge badge-warning">Pending</span>
+      <% } else if (lease.status === 'expired') { %>
+        <span class="badge badge-danger">Expired</span>
+      <% } else if (lease.status === 'terminated') { %>
+        <span class="badge badge-danger">Terminated</span>
+      <% } else { %>
+        <span class="badge badge-secondary"><%= lease.status %></span>
+      <% } %>
+    </h2>
+  </div>
+  <div class="card-body">
+    <div class="detail-list">
+      <div class="form-row">
+        <strong>Tenant:</strong>
+        <span><a href="/tenants/<%= lease.tenant_id %>"><%= lease.first_name %> <%= lease.last_name %></a></span>
+      </div>
+      <div class="form-row">
+        <strong>Property:</strong>
+        <span><a href="/properties/<%= lease.property_id %>"><%= lease.property_name %></a></span>
+      </div>
+      <div class="form-row">
+        <strong>Unit:</strong>
+        <span><a href="/units/<%= lease.unit_id %>">Unit <%= lease.unit_number %></a></span>
+      </div>
+      <div class="form-row">
+        <strong>Start Date:</strong>
+        <span><%= new Date(lease.start_date).toLocaleDateString() %></span>
+      </div>
+      <div class="form-row">
+        <strong>End Date:</strong>
+        <span><%= new Date(lease.end_date).toLocaleDateString() %></span>
+      </div>
+      <div class="form-row">
+        <strong>Rent Amount:</strong>
+        <span>$<%= parseFloat(lease.rent_amount).toFixed(2) %></span>
+      </div>
+      <div class="form-row">
+        <strong>Payment Frequency:</strong>
+        <span><%= lease.payment_frequency.charAt(0).toUpperCase() + lease.payment_frequency.slice(1) %></span>
+      </div>
+      <div class="form-row">
+        <strong>Status:</strong>
+        <span>
+          <% if (lease.status === 'active') { %>
+            <span class="badge badge-success">Active</span>
+          <% } else if (lease.status === 'pending') { %>
+            <span class="badge badge-warning">Pending</span>
+          <% } else if (lease.status === 'expired') { %>
+            <span class="badge badge-danger">Expired</span>
+          <% } else if (lease.status === 'terminated') { %>
+            <span class="badge badge-danger">Terminated</span>
+          <% } else { %>
+            <span class="badge badge-secondary"><%= lease.status %></span>
+          <% } %>
+        </span>
+      </div>
+      <% if (lease.notes) { %>
+        <div class="form-row">
+          <strong>Notes:</strong>
+          <span><%= lease.notes %></span>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2>Payments</h2>
+    <a href="/payments/new?lease_id=<%= lease.id %>" class="btn btn-success btn-sm">Record Payment</a>
+  </div>
+  <div class="card-body">
+    <% if (payments.length === 0) { %>
+      <div class="empty-state">
+        <p>No payments recorded for this lease yet.</p>
+        <a href="/payments/new?lease_id=<%= lease.id %>" class="btn btn-success">Record First Payment</a>
+      </div>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Due Date</th>
+            <th>Amount Due</th>
+            <th>Amount Paid</th>
+            <th>Late Fee</th>
+            <th>Status</th>
+            <th>Paid Date</th>
+            <th>Payment Method</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% payments.forEach(function(payment) { %>
+            <tr>
+              <td><%= new Date(payment.due_date).toLocaleDateString() %></td>
+              <td>$<%= parseFloat(payment.amount_due).toFixed(2) %></td>
+              <td>
+                <% if (payment.amount_paid != null) { %>
+                  $<%= parseFloat(payment.amount_paid).toFixed(2) %>
+                <% } else { %>
+                  &mdash;
+                <% } %>
+              </td>
+              <td>
+                <% if (payment.late_fee && parseFloat(payment.late_fee) > 0) { %>
+                  $<%= parseFloat(payment.late_fee).toFixed(2) %>
+                <% } else { %>
+                  &mdash;
+                <% } %>
+              </td>
+              <td>
+                <% if (payment.status === 'paid') { %>
+                  <span class="badge badge-success">Paid</span>
+                <% } else if (payment.status === 'pending') { %>
+                  <span class="badge badge-warning">Pending</span>
+                <% } else if (payment.status === 'overdue') { %>
+                  <span class="badge badge-danger">Overdue</span>
+                <% } else if (payment.status === 'partial') { %>
+                  <span class="badge badge-warning">Partial</span>
+                <% } else { %>
+                  <span class="badge badge-secondary"><%= payment.status %></span>
+                <% } %>
+              </td>
+              <td>
+                <% if (payment.paid_date) { %>
+                  <%= new Date(payment.paid_date).toLocaleDateString() %>
+                <% } else { %>
+                  &mdash;
+                <% } %>
+              </td>
+              <td><%= payment.payment_method ? payment.payment_method : '&mdash;' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </div>
+</div>
+
+<div class="actions">
+  <a href="/leases" class="btn btn-secondary">Back to Leases</a>
+</div>
+
+<%- include('../partials/footer') %>

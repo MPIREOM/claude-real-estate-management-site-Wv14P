@@ -1,0 +1,89 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1><%= lease ? 'Edit Lease' : 'New Lease' %></h1>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="<%= lease ? '/leases/' + lease.id : '/leases' %>" method="POST">
+
+      <div class="form-group">
+        <label for="tenant_id">Tenant</label>
+        <select name="tenant_id" id="tenant_id" class="form-control" required>
+          <option value="">-- Select Tenant --</option>
+          <% tenants.forEach(function(tenant) { %>
+            <option value="<%= tenant.id %>"
+              <%= (lease && lease.tenant_id == tenant.id) || (!lease && preselectedTenantId && preselectedTenantId == tenant.id) ? 'selected' : '' %>
+            ><%= tenant.first_name %> <%= tenant.last_name %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="unit_id">Unit</label>
+        <select name="unit_id" id="unit_id" class="form-control" required>
+          <option value="">-- Select Unit --</option>
+          <% units.forEach(function(unit) { %>
+            <option value="<%= unit.id %>"
+              <%= (lease && lease.unit_id == unit.id) || (!lease && preselectedUnitId && preselectedUnitId == unit.id) ? 'selected' : '' %>
+            ><%= unit.property_name %> - Unit <%= unit.unit_number %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="start_date">Start Date</label>
+          <input type="date" name="start_date" id="start_date" class="form-control" required
+            value="<%= lease && lease.start_date ? new Date(lease.start_date).toISOString().split('T')[0] : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label for="end_date">End Date</label>
+          <input type="date" name="end_date" id="end_date" class="form-control" required
+            value="<%= lease && lease.end_date ? new Date(lease.end_date).toISOString().split('T')[0] : '' %>">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="rent_amount">Rent Amount ($)</label>
+          <input type="number" name="rent_amount" id="rent_amount" class="form-control" step="0.01" min="0" required
+            value="<%= lease ? lease.rent_amount : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label for="payment_frequency">Payment Frequency</label>
+          <select name="payment_frequency" id="payment_frequency" class="form-control" required>
+            <option value="monthly" <%= lease && lease.payment_frequency === 'monthly' ? 'selected' : '' %>>Monthly</option>
+            <option value="quarterly" <%= lease && lease.payment_frequency === 'quarterly' ? 'selected' : '' %>>Quarterly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select name="status" id="status" class="form-control" required>
+          <option value="active" <%= lease && lease.status === 'active' ? 'selected' : '' %>>Active</option>
+          <option value="pending" <%= (!lease || lease.status === 'pending') ? 'selected' : '' %>>Pending</option>
+          <option value="expired" <%= lease && lease.status === 'expired' ? 'selected' : '' %>>Expired</option>
+          <option value="terminated" <%= lease && lease.status === 'terminated' ? 'selected' : '' %>>Terminated</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="notes">Notes</label>
+        <textarea name="notes" id="notes" class="form-control" rows="4"><%= lease && lease.notes ? lease.notes : '' %></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary"><%= lease ? 'Update Lease' : 'Create Lease' %></button>
+        <a href="<%= lease ? '/leases/' + lease.id : '/leases' %>" class="btn btn-secondary">Cancel</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

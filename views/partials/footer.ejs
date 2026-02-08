@@ -1,0 +1,21 @@
+  </main>
+</div>
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('active');
+}
+document.querySelectorAll('.alert').forEach(el => {
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 4000);
+});
+document.querySelectorAll('.confirm-delete').forEach(form => {
+  form.addEventListener('submit', e => {
+    if (!confirm('Are you sure you want to delete this? This action cannot be undone.')) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
+</body>
+</html>

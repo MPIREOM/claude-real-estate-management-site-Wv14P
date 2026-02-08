@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Tenants</h1>
+  <a href="/tenants/new" class="btn btn-primary">Add New Tenant</a>
+</div>
+
+<% if (tenants && tenants.length > 0) { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Property</th>
+        <th>Unit</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% tenants.forEach(function(tenant) { %>
+        <tr>
+          <td><%= tenant.first_name %></td>
+          <td><%= tenant.last_name %></td>
+          <td><%= tenant.email %></td>
+          <td><%= tenant.phone || '-' %></td>
+          <td><%= tenant.property_name || '-' %></td>
+          <td><%= tenant.unit_number || '-' %></td>
+          <td class="actions">
+            <a href="/tenants/<%= tenant.id %>" class="btn btn-sm btn-secondary">View</a>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <div class="empty-state">
+    <p>No tenants found.</p>
+    <a href="/tenants/new" class="btn btn-primary">Add Your First Tenant</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

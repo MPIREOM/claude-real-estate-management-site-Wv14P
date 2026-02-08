@@ -1,0 +1,55 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Properties</h1>
+  <a href="/properties/new" class="btn btn-primary">Add New Property</a>
+</div>
+
+<% if (properties && properties.length > 0) { %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Type</th>
+        <th>Units</th>
+        <th>Occupied</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% properties.forEach(function(property) { %>
+        <tr>
+          <td>
+            <a href="/properties/<%= property.id %>"><%= property.name %></a>
+          </td>
+          <td><%= property.address %></td>
+          <td>
+            <% if (property.type === 'building') { %>
+              <span class="badge badge-info">Building</span>
+            <% } else { %>
+              <span class="badge badge-secondary">Standalone</span>
+            <% } %>
+          </td>
+          <td><%= property.unit_count || 0 %></td>
+          <td><%= property.occupied_count || 0 %></td>
+          <td class="actions">
+            <a href="/properties/<%= property.id %>" class="btn btn-sm btn-secondary">View</a>
+            <a href="/properties/<%= property.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
+            <form action="/properties/<%= property.id %>/delete" method="POST" style="display:inline;">
+              <button type="submit" class="btn btn-sm btn-danger confirm-delete">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <div class="empty-state">
+    <h3>No Properties Found</h3>
+    <p>Get started by adding your first property.</p>
+    <a href="/properties/new" class="btn btn-primary">Add New Property</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

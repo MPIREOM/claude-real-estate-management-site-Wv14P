@@ -1,0 +1,91 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Maintenance Requests</h1>
+  <a href="/maintenance/new" class="btn btn-primary">New Request</a>
+</div>
+
+<div class="filter-tabs">
+  <a href="/maintenance" class="<%= statusFilter === 'all' ? 'active' : '' %>">All</a>
+  <a href="/maintenance?status=open" class="<%= statusFilter === 'open' ? 'active' : '' %>">Open</a>
+  <a href="/maintenance?status=in_progress" class="<%= statusFilter === 'in_progress' ? 'active' : '' %>">In Progress</a>
+  <a href="/maintenance?status=completed" class="<%= statusFilter === 'completed' ? 'active' : '' %>">Completed</a>
+  <a href="/maintenance?status=closed" class="<%= statusFilter === 'closed' ? 'active' : '' %>">Closed</a>
+</div>
+
+<% if (requests.length > 0) { %>
+  <div class="card">
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Property</th>
+            <th>Unit</th>
+            <th>Tenant</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% requests.forEach(function(req) { %>
+            <tr>
+              <td><%= req.title %></td>
+              <td><%= req.property_name %></td>
+              <td><%= req.unit_number %></td>
+              <td>
+                <% if (req.first_name && req.last_name) { %>
+                  <%= req.first_name %> <%= req.last_name %>
+                <% } else if (req.first_name) { %>
+                  <%= req.first_name %>
+                <% } else if (req.last_name) { %>
+                  <%= req.last_name %>
+                <% } else { %>
+                  &mdash;
+                <% } %>
+              </td>
+              <td>
+                <% if (req.priority === 'urgent') { %>
+                  <span class="badge badge-danger">Urgent</span>
+                <% } else if (req.priority === 'high') { %>
+                  <span class="badge badge-warning">High</span>
+                <% } else if (req.priority === 'medium') { %>
+                  <span class="badge badge-info">Medium</span>
+                <% } else { %>
+                  <span class="badge badge-secondary">Low</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (req.status === 'completed') { %>
+                  <span class="badge badge-success">Completed</span>
+                <% } else if (req.status === 'in_progress') { %>
+                  <span class="badge badge-info">In Progress</span>
+                <% } else if (req.status === 'open') { %>
+                  <span class="badge badge-secondary">Open</span>
+                <% } else { %>
+                  <span class="badge badge-secondary">Closed</span>
+                <% } %>
+              </td>
+              <td><%= new Date(req.created_at).toLocaleDateString() %></td>
+              <td class="actions">
+                <a href="/maintenance/<%= req.id %>/edit" class="btn btn-sm btn-secondary">Edit</a>
+                <form action="/maintenance/<%= req.id %>/delete" method="POST" style="display:inline;">
+                  <button type="submit" class="btn btn-sm btn-danger confirm-delete">Delete</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } else { %>
+  <div class="empty-state">
+    <p>No maintenance requests found.</p>
+    <a href="/maintenance/new" class="btn btn-primary">Create a Request</a>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

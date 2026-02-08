@@ -1,0 +1,83 @@
+<%- include('../partials/header') %>
+
+<div class="page-header">
+  <h1>Leases</h1>
+  <a href="/leases/new" class="btn btn-primary">+ New Lease</a>
+</div>
+
+<div class="filter-tabs">
+  <a href="/leases" class="<%= statusFilter === 'all' ? 'active' : '' %>">All</a>
+  <a href="/leases?status=active" class="<%= statusFilter === 'active' ? 'active' : '' %>">Active</a>
+  <a href="/leases?status=pending" class="<%= statusFilter === 'pending' ? 'active' : '' %>">Pending</a>
+  <a href="/leases?status=expired" class="<%= statusFilter === 'expired' ? 'active' : '' %>">Expired</a>
+  <a href="/leases?status=terminated" class="<%= statusFilter === 'terminated' ? 'active' : '' %>">Terminated</a>
+</div>
+
+<% if (leases.length === 0) { %>
+  <div class="empty-state">
+    <h3>No leases found</h3>
+    <% if (statusFilter !== 'all') { %>
+      <p>There are no <%= statusFilter %> leases. Try a different filter or create a new lease.</p>
+    <% } else { %>
+      <p>No leases have been created yet.</p>
+    <% } %>
+    <a href="/leases/new" class="btn btn-primary">Create Lease</a>
+  </div>
+<% } else { %>
+  <div class="card">
+    <div class="card-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tenant</th>
+            <th>Property / Unit</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Rent</th>
+            <th>Frequency</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% leases.forEach(function(lease) { %>
+            <tr>
+              <td>
+                <a href="/tenants/<%= lease.tenant_id %>"><%= lease.first_name %> <%= lease.last_name %></a>
+              </td>
+              <td>
+                <a href="/properties/<%= lease.property_id %>"><%= lease.property_name %></a>
+                <% if (lease.unit_number) { %>
+                  &mdash; Unit <%= lease.unit_number %>
+                <% } %>
+              </td>
+              <td><%= new Date(lease.start_date).toLocaleDateString() %></td>
+              <td><%= new Date(lease.end_date).toLocaleDateString() %></td>
+              <td>$<%= parseFloat(lease.rent_amount).toFixed(2) %></td>
+              <td><%= lease.payment_frequency.charAt(0).toUpperCase() + lease.payment_frequency.slice(1) %></td>
+              <td>
+                <% if (lease.status === 'active') { %>
+                  <span class="badge badge-success">Active</span>
+                <% } else if (lease.status === 'pending') { %>
+                  <span class="badge badge-warning">Pending</span>
+                <% } else if (lease.status === 'expired') { %>
+                  <span class="badge badge-danger">Expired</span>
+                <% } else if (lease.status === 'terminated') { %>
+                  <span class="badge badge-danger">Terminated</span>
+                <% } else { %>
+                  <span class="badge badge-secondary"><%= lease.status %></span>
+                <% } %>
+              </td>
+              <td class="actions">
+                <a href="/leases/<%= lease.id %>" class="btn btn-sm btn-secondary">View</a>
+                <a href="/leases/<%= lease.id %>/edit" class="btn btn-sm btn-primary">Edit</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,139 @@
+<%- include('partials/header') %>
+
+<div class="page-header">
+  <h1>Reports</h1>
+  <div class="actions">
+    <a href="/reports/export/payments" class="btn btn-sm btn-secondary">Export Payments CSV</a>
+    <a href="/reports/export/tenants" class="btn btn-sm btn-secondary">Export Tenants CSV</a>
+    <a href="/reports/export/overdue" class="btn btn-sm btn-secondary">Export Overdue CSV</a>
+  </div>
+</div>
+
+<!-- Year selector -->
+<div class="filter-tabs" style="margin-bottom: 20px;">
+  <% years.forEach(y => { %>
+    <a href="/reports?year=<%= y %>" class="<%= y === year ? 'active' : '' %>"><%= y %></a>
+  <% }) %>
+</div>
+
+<!-- Summary stats -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon">&#36;</div>
+    <div class="stat-value" style="color: var(--success)">$<%= Number(totalCollected).toLocaleString() %></div>
+    <div class="stat-label">Total Collected (<%= year %>)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon" style="color: var(--danger)">&#9888;</div>
+    <div class="stat-value" style="color: var(--danger)">$<%= Number(totalOutstanding).toLocaleString() %></div>
+    <div class="stat-label">Total Outstanding</div>
+  </div>
+</div>
+
+<!-- Monthly Revenue Chart -->
+<div class="card">
+  <div class="card-header">
+    <h3>Monthly Revenue (<%= year %>)</h3>
+  </div>
+  <div class="card-body">
+    <% var maxRevenue = Math.max(...revenueByMonth.map(r => r.revenue), 1); %>
+    <div class="chart-bar">
+      <% var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; %>
+      <% revenueByMonth.forEach((r, i) => { %>
+        <div class="bar-item">
+          <div class="bar-value">$<%= Number(r.revenue).toLocaleString() %></div>
+          <div class="bar" style="height: <%= Math.max((r.revenue / maxRevenue) * 160, 2) %>px;"></div>
+          <div class="bar-label"><%= monthNames[i] %></div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<!-- Property Performance -->
+<div class="card">
+  <div class="card-header">
+    <h3>Property Performance (<%= year %>)</h3>
+  </div>
+  <div class="card-body">
+    <% if (propertyPerformance.length === 0) { %>
+      <div class="empty-state"><p>No properties yet</p></div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Units</th>
+              <th>Occupancy</th>
+              <th>Total Collected</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% propertyPerformance.forEach(p => { %>
+              <tr>
+                <td><a href="/properties/<%= p.id %>"><%= p.name %></a></td>
+                <td><%= p.total_units %></td>
+                <td>
+                  <% var rate = p.total_units > 0 ? Math.round((p.occupied_units / p.total_units) * 100) : 0; %>
+                  <span class="badge badge-<%= rate >= 80 ? 'success' : rate >= 50 ? 'warning' : 'danger' %>">
+                    <%= p.occupied_units %>/<%= p.total_units %> (<%= rate %>%)
+                  </span>
+                </td>
+                <td>$<%= Number(p.total_collected).toLocaleString() %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Overdue Payments -->
+<div class="card">
+  <div class="card-header">
+    <h3>Overdue & Partial Payments</h3>
+  </div>
+  <div class="card-body">
+    <% if (overdueSummary.length === 0) { %>
+      <div class="empty-state">
+        <div class="empty-icon">&#10003;</div>
+        <p>No overdue payments!</p>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Property</th>
+              <th>Unit</th>
+              <th>Due Date</th>
+              <th>Amount Due</th>
+              <th>Paid</th>
+              <th>Late Fee</th>
+              <th>Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% overdueSummary.forEach(o => { %>
+              <tr>
+                <td><%= o.first_name %> <%= o.last_name %></td>
+                <td><%= o.property_name %></td>
+                <td><%= o.unit_number %></td>
+                <td><%= o.due_date %></td>
+                <td>$<%= Number(o.amount_due).toLocaleString() %></td>
+                <td>$<%= Number(o.amount_paid).toLocaleString() %></td>
+                <td>$<%= Number(o.late_fee).toLocaleString() %></td>
+                <td style="color: var(--danger); font-weight: 600;">$<%= Number(o.balance_owed).toLocaleString() %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
