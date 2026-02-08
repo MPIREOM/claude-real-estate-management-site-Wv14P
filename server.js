@@ -4,10 +4,6 @@ const path = require('path');
 const { initialize } = require('./db/database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Initialize database
-initialize();
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -38,6 +34,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Ensure DB is initialized before handling requests
+let dbReady = false;
+app.use(async (req, res, next) => {
+  if (!dbReady) {
+    await initialize();
+    dbReady = true;
+  }
+  next();
+});
+
 // Routes
 app.use('/', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
@@ -57,7 +63,14 @@ app.get('/', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Real Estate Management running at http://localhost:${PORT}`);
-  console.log(`Default login: admin / admin123`);
-});
+// Local development: start listening on a port
+// On Vercel: the app is exported as a module for the serverless handler
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Real Estate Management running at http://localhost:${PORT}`);
+    console.log(`Default login: admin / admin123`);
+  });
+}
+
+module.exports = app;

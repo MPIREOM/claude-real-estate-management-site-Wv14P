@@ -1,32 +1,65 @@
-const Database = require('better-sqlite3');
+const initSqlJs = require('sql.js');
+const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DB_PATH = path.join(__dirname, 'realestate.db');
+// On Vercel, only /tmp is writable. Locally, use the project db/ directory.
+const IS_VERCEL = !!process.env.VERCEL;
+const DB_PATH = IS_VERCEL
+  ? path.join('/tmp', 'realestate.db')
+  : path.join(__dirname, 'realestate.db');
 
 let db;
+let SQL;
 
-function getDb() {
-  if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+async function getDb() {
+  if (db) return db;
+
+  if (!SQL) {
+    SQL = await initSqlJs();
   }
+
+  // Try to load existing database file
+  try {
+    if (fs.existsSync(DB_PATH)) {
+      const fileBuffer = fs.readFileSync(DB_PATH);
+      db = new SQL.Database(fileBuffer);
+    } else {
+      db = new SQL.Database();
+    }
+  } catch {
+    db = new SQL.Database();
+  }
+
+  db.run('PRAGMA foreign_keys = ON');
   return db;
 }
 
-function initialize() {
-  const db = getDb();
+function saveDb() {
+  if (!db) return;
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(DB_PATH, buffer);
+  } catch (err) {
+    console.error('Failed to save database:', err.message);
+  }
+}
 
-  db.exec(`
+async function initialize() {
+  const db = await getDb();
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       name TEXT NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS properties (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -34,8 +67,10 @@ function initialize() {
       type TEXT NOT NULL CHECK(type IN ('building', 'standalone')),
       notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS units (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       property_id INTEGER NOT NULL,
@@ -46,8 +81,10 @@ function initialize() {
       rent_amount REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'vacant' CHECK(status IN ('occupied', 'vacant')),
       FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS tenants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       first_name TEXT NOT NULL,
@@ -58,8 +95,10 @@ function initialize() {
       emergency_phone TEXT,
       notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS leases (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       unit_id INTEGER NOT NULL,
@@ -73,8 +112,10 @@ function initialize() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS payments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       lease_id INTEGER NOT NULL,
@@ -88,8 +129,10 @@ function initialize() {
       notes TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (lease_id) REFERENCES leases(id) ON DELETE CASCADE
-    );
+    )
+  `);
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS maintenance_requests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       unit_id INTEGER NOT NULL,
@@ -102,17 +145,43 @@ function initialize() {
       completed_at DATETIME,
       FOREIGN KEY (unit_id) REFERENCES units(id) ON DELETE CASCADE,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE SET NULL
-    );
+    )
   `);
 
   // Seed default admin user if none exists
-  const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+  const result = db.exec('SELECT COUNT(*) as count FROM users');
+  const userCount = result[0].values[0][0];
   if (userCount === 0) {
     const hash = bcrypt.hashSync('admin123', 10);
-    db.prepare('INSERT INTO users (username, password_hash, name) VALUES (?, ?, ?)').run('admin', hash, 'Administrator');
+    db.run('INSERT INTO users (username, password_hash, name) VALUES (?, ?, ?)', ['admin', hash, 'Administrator']);
   }
 
+  saveDb();
   return db;
 }
 
-module.exports = { getDb, initialize };
+// Helper: sql.js returns {columns, values} arrays. This converts to objects like better-sqlite3 did.
+function queryAll(sql, params = []) {
+  const d = db;
+  const stmt = d.prepare(sql);
+  if (params.length) stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) {
+    rows.push(stmt.getAsObject());
+  }
+  stmt.free();
+  return rows;
+}
+
+function queryGet(sql, params = []) {
+  const rows = queryAll(sql, params);
+  return rows.length > 0 ? rows[0] : undefined;
+}
+
+function queryRun(sql, params = []) {
+  db.run(sql, params);
+  saveDb();
+  return { lastInsertRowid: db.exec('SELECT last_insert_rowid()')[0].values[0][0] };
+}
+
+module.exports = { getDb, initialize, saveDb, queryAll, queryGet, queryRun };
